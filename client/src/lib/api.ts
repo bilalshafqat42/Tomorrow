@@ -1,6 +1,5 @@
 // client/src/lib/api.ts
-const API_BASE = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
-// Example: https://tomorrow-main.onrender.com
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE!;
 
 export async function api(path: string, options: RequestInit = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -9,14 +8,10 @@ export async function api(path: string, options: RequestInit = {}) {
       "Content-Type": "application/json",
       ...(options.headers || {}),
     },
-    credentials: "include", // ✅ REQUIRED for cookies
+    credentials: "include",
   });
 
   const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(data.message || "Request failed");
-  }
-
+  if (!res.ok) throw new Error(data.message || "Request failed");
   return data;
 }
