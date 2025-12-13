@@ -1,72 +1,83 @@
 import express from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { signToken } from "../utils/jwt.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// REGISTER
+// helper: cookie options
+function cookieOptions() {
+  const isProd = process.env.NODE_ENV === "production";
+  return {
+    httpOnly: true,
+    secure: isProd, // true on https
+    sameSite: isProd ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+}
+
+// POST /api/auth/register
 router.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
-
   try {
-    const exists = await User.findOne({ email });
-    if (exists) {
-      return res.status(400).json({ message: "User already exists" });
-    }
+    const { name, email, password } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if (!name || !email || !password)
+      return res.status(400).json({ message: "All fields are required" });
 
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
+    const exists = await User.findOne({ email: email.toLowerCase() });
+    if (exists)
+      return res.status(409).json({ message: "Email already exists" });
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = await User.create({ name, email, passwordHash });
+
+    const token = signToken(user._id.toString());
+    res.cookie("token", token, cookieOptions());
+
+    return res.json({
+      user: { id: user._id, name: user.name, email: user.email },
     });
-
-    res.status(201).json({ message: "User registered successfully" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  } catch (e) {
+    return res.status(500).json({ message: "Server error", error: e.message });
   }
 });
 
-// LOGIN
+// POST /api/auth/login
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-
   try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
+    const { email, password } = req.body;
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
+    if (!email || !password)
+      return res.status(400).json({ message: "Email and password required" });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) return res.status(401).json({ message: "Invalid credentials" });
+
+    const token = signToken(user._id.toString());
+    res.cookie("token", token, cookieOptions());
+
+    return res.json({
+      user: { id: user._id, name: user.name, email: user.email },
     });
-
-    res.json({ token });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  } catch (e) {
+    return res.status(500).json({ message: "Server error", error: e.message });
   }
 });
 
-// TOKEN CHECK
-router.get("/me", async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-      return res.status(401).json({ message: "No token" });
-    }
+// GET /api/auth/me (token check)
+router.get("/me", requireAuth, async (req, res) => {
+  const user = await User.findById(req.userId).select("_id name email");
+  return res.json({ user });
+});
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    res.json({ userId: decoded.id });
-  } catch {
-    res.status(401).json({ message: "Invalid token" });
-  }
+// POST /api/auth/logout
+router.post("/logout", (req, res) => {
+  res.clearCookie("token", cookieOptions());
+  return res.json({ message: "Logged out" });
 });
 
 export default router;

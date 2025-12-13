@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
 
 import authRoutes from "./routes/auth.js";
 
@@ -9,35 +10,39 @@ dotenv.config();
 
 const app = express();
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
+/**
+ * IMPORTANT:
+ * - allow cookies from your frontend domain
+ * - Render URL must match exactly
+ */
+const FRONTEND_URL = process.env.FRONTEND_URL; // https://tomorrow-app.onrender.com
 
-// Health check (important for Render)
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+  })
+);
+
+app.use(express.json());
+app.use(cookieParser());
+
+// Health
 app.get("/", (req, res) => {
-  res.status(200).json({ message: "Backend is working ✅" });
+  res.json({ message: "Backend is working ✅" });
 });
 
-// Routes
 app.use("/api/auth", authRoutes);
 
-// Server + DB
 const PORT = process.env.PORT || 4000;
 
-(async () => {
-  try {
-    if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI missing");
-    }
-
-    await mongoose.connect(process.env.MONGO_URI);
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
     console.log("MongoDB connected ✅");
-
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("MongoDB error ❌", error.message);
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+  .catch((err) => {
+    console.log("MongoDB error ❌", err.message);
     process.exit(1);
-  }
-})();
+  });

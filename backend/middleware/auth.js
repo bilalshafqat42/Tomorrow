@@ -1,16 +1,15 @@
-import jwt from "jsonwebtoken";
+import { verifyToken } from "../utils/jwt.js";
 
-export default function auth(req, res, next) {
+export function requireAuth(req, res, next) {
+  const token = req.cookies?.token; // web cookie auth
+
+  if (!token) return res.status(401).json({ message: "Not authenticated" });
+
   try {
-    const header = req.headers.authorization || "";
-    const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-
-    if (!token) return res.status(401).json({ message: "No token provided" });
-
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = payload; // { id, role }
+    const decoded = verifyToken(token);
+    req.userId = decoded.id;
     next();
-  } catch (err) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+  } catch (e) {
+    return res.status(401).json({ message: "Invalid token" });
   }
 }
