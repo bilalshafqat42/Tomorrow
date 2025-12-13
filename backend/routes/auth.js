@@ -1,23 +1,19 @@
+// backend/routes/auth.js
 import express from "express";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import { signToken } from "../utils/jwt.js";
-import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// helper: cookie options
-function cookieOptions() {
-  const isProd = process.env.NODE_ENV === "production";
-  return {
-    httpOnly: true,
-    secure: isProd, // true on https
-    sameSite: isProd ? "none" : "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-}
+const cookieOptions = {
+  httpOnly: true,
+  secure: true, // Render uses HTTPS so keep true
+  sameSite: "none", // required when frontend+backend are different domains
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
 
-// POST /api/auth/register
+// ✅ REGISTER
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -25,25 +21,30 @@ router.post("/register", async (req, res) => {
     if (!name || !email || !password)
       return res.status(400).json({ message: "All fields are required" });
 
-    const exists = await User.findOne({ email: email.toLowerCase() });
+    const exists = await User.findOne({ email });
     if (exists)
-      return res.status(409).json({ message: "Email already exists" });
+      return res.status(400).json({ message: "Email already exists" });
 
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, passwordHash });
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await User.create({ name, email, password: hashed });
 
-    const token = signToken(user._id.toString());
-    res.cookie("token", token, cookieOptions());
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
-    return res.json({
+    // ✅ COOKIE SET HERE
+    res.cookie("token", token, cookieOptions);
+
+    return res.status(201).json({
+      message: "Registered successfully ✅",
       user: { id: user._id, name: user.name, email: user.email },
     });
-  } catch (e) {
-    return res.status(500).json({ message: "Server error", error: e.message });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
   }
 });
 
-// POST /api/auth/login
+// ✅ LOGIN
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -51,33 +52,53 @@ router.post("/login", async (req, res) => {
     if (!email || !password)
       return res.status(400).json({ message: "Email and password required" });
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
-    const ok = await bcrypt.compare(password, user.passwordHash);
+    const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ message: "Invalid credentials" });
 
-    const token = signToken(user._id.toString());
-    res.cookie("token", token, cookieOptions());
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    // ✅ COOKIE SET HERE
+    res.cookie("token", token, cookieOptions);
 
     return res.json({
+      message: "Login successful ✅",
       user: { id: user._id, name: user.name, email: user.email },
     });
-  } catch (e) {
-    return res.status(500).json({ message: "Server error", error: e.message });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
   }
 });
 
-// GET /api/auth/me (token check)
-router.get("/me", requireAuth, async (req, res) => {
-  const user = await User.findById(req.userId).select("_id name email");
-  return res.json({ user });
+// ✅ ME (token check)
+router.get("/me", async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: "Not logged in" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) return res.status(401).json({ message: "User not found" });
+
+    return res.json({ user });
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
 });
 
-// POST /api/auth/logout
+// ✅ LOGOUT (optional but recommended)
 router.post("/logout", (req, res) => {
-  res.clearCookie("token", cookieOptions());
-  return res.json({ message: "Logged out" });
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
+  return res.json({ message: "Logged out ✅" });
 });
 
 export default router;

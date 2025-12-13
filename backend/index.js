@@ -1,3 +1,4 @@
+// backend/index.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -10,30 +11,33 @@ dotenv.config();
 
 const app = express();
 
-/**
- * IMPORTANT:
- * - allow cookies from your frontend domain
- * - Render URL must match exactly
- */
-const FRONTEND_URL = process.env.FRONTEND_URL; // https://tomorrow-app.onrender.com
+// If you use secure cookies behind Render/Proxy
+app.set("trust proxy", 1);
 
+// ✅ Middlewares
+app.use(express.json());
+app.use(cookieParser());
+
+// ✅ CORS (VERY IMPORTANT)
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: [
+      "https://tomorrow-app.onrender.com", // frontend
+      "http://localhost:3000", // local next
+    ],
     credentials: true,
   })
 );
 
-app.use(express.json());
-app.use(cookieParser());
-
-// Health
+// ✅ Health check
 app.get("/", (req, res) => {
   res.json({ message: "Backend is working ✅" });
 });
 
+// ✅ Routes
 app.use("/api/auth", authRoutes);
 
+// ✅ Mongo connect + start server
 const PORT = process.env.PORT || 4000;
 
 mongoose

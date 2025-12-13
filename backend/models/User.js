@@ -1,9 +1,9 @@
+// backend/models/User.js
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
-    phone: { type: String, default: "" },
     email: {
       type: String,
       required: true,
@@ -11,12 +11,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    passwordHash: { type: String, required: true },
-    role: {
-      type: String,
-      enum: ["admin", "sales_manager", "subscriber"],
-      default: "subscriber",
-    },
+    password: { type: String, required: true },
   },
   { timestamps: true }
 );
