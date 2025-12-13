@@ -1,0 +1,56 @@
+@import "tailwindcss"; /* MUST be imported before @theme */
+
+html,
+body,
+#__next {
+  margin: 0;
+  padding: 0;
+
+  height: 100%;
+  width: 100%;
+
+  overflow: hidden;
+}
+
+@theme inline {
+  --font-heading: var(--font-montserrat), sans-serif;
+  --font-body: var(--font-poppins), sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-body;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+}
+
+@keyframes slide-down {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.8s ease-out forwards;
+}
+
+.nextjs-toast {
+  display: none;
+}
+
+#devtools-indicator {
+  display: none;
+}

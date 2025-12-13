@@ -1,0 +1,40 @@
+"use client";
+import React from "react";
+import TopBar from "@/components/layout/TopBar";
+import Slider from "@/components/ui/Slider";
+import { project166NavLinks } from "@/data/166/project166NavLinks";
+import { commercialNavLinks } from "@/data/commercial/commercialNavLinks";
+
+import { slides166 } from "@/data/166/slides166";
+// import { project166NavLinks } from "../data/166/project166NavLinks";
+
+import ProjectNavigation from "@/components/navigation/ProjectNavigation";
+import LeftNavigation from "@/components/navigation/LeftNavigation";
+
+const Floor = () => {
+  // Define variables needed for the Slider component
+  const exteriorSlides = slides166.floor;
+  const currentLang = "en"; // Defaulting to English
+
+  const sidebarLinks = project166NavLinks.left;
+  const bottomLinks = commercialNavLinks.bottom;
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* TopBar is guaranteed to exist in components/TopBar.jsx */}
+      <TopBar title={"Floor Plans"} />
+      <LeftNavigation links={sidebarLinks} />
+      <main className="flex-grow flex items-center justify-center">
+        {/* Pass the extracted data to the Slider component */}
+        <Slider
+          slidesData={exteriorSlides}
+          lang={currentLang}
+          autoPlayDuration={8000} // Custom duration of 8 seconds
+        />
+      </main>
+      <ProjectNavigation links={bottomLinks} />
+    </div>
+  );
+};
+
+export default Floor;
