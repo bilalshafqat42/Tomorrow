@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Backend API for Tomorrow web & mobile apps",
   "private": true,
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -11,15 +12,6 @@
   "engines": {
     "node": ">=18"
   },
-  "keywords": [
-    "node",
-    "express",
-    "mongodb",
-    "jwt",
-    "api"
-  ],
-  "author": "Bilal Shafqat",
-  "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
