@@ -1,27 +1,31 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get("token");
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-  const isAuthPage =
-    request.nextUrl.pathname.startsWith("/login") ||
-    request.nextUrl.pathname.startsWith("/register");
-
-  // ❌ Not logged in → redirect to login
-  if (!token && !isAuthPage) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // public routes
+  if (
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon") ||
+    pathname.startsWith("/assets")
+  ) {
+    return NextResponse.next();
   }
 
-  // ✅ Logged in → block login/register
-  if (token && isAuthPage) {
-    return NextResponse.redirect(new URL("/", request.url));
+  const token = req.cookies.get("token")?.value;
+
+  if (!token) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
 }
 
-// Apply middleware to all routes
 export const config = {
-  matcher: ["/((?!_next|favicon.ico|assets).*)"],
+  matcher: ["/((?!api).*)"],
 };
