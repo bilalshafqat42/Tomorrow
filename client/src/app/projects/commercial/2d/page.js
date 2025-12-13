@@ -36,3 +36,14 @@
 // };
 
 // export default FloorPlan;
+// src/app/projects/commercial/2d/page.js
+export default function Commercial2DPage() {
+  return (
+    <main style={{ padding: 24 }}>
+      <h1 style={{ fontSize: 28, marginBottom: 10 }}>Commercial • 2D Plans</h1>
+      <p style={{ opacity: 0.8 }}>
+        Coming soon. (This page is required so Next.js can build successfully.)
+      </p>
+    </main>
+  );
+}
