@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErr(null);
     setLoading(true);
@@ -22,7 +22,6 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      // ✅ after login go to dashboard (your app/page.js)
       router.replace("/");
       router.refresh();
     } catch (e: any) {
@@ -53,14 +52,12 @@ export default function LoginPage() {
           boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
         }}
       >
-        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 14 }}>
           <img
             src="/assets/images/tom-logo/horizontal-logo.svg"
             alt="Tomorrow"
             style={{ height: 42, objectFit: "contain" }}
             onError={(e) => {
-              // if logo path not found, hide image
               (e.currentTarget as HTMLImageElement).style.display = "none";
             }}
           />
@@ -68,7 +65,7 @@ export default function LoginPage() {
             Welcome Back
           </h2>
           <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
-            Login to continue to your dashboard
+            Login to continue
           </p>
         </div>
 
@@ -102,7 +99,6 @@ export default function LoginPage() {
               padding: "12px 12px",
               borderRadius: 12,
               border: "1px solid #e2e8f0",
-              outline: "none",
             }}
           />
 
@@ -120,7 +116,6 @@ export default function LoginPage() {
               padding: "12px 12px",
               borderRadius: 12,
               border: "1px solid #e2e8f0",
-              outline: "none",
             }}
           />
 

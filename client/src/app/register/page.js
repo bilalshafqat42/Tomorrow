@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -14,7 +15,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErr(null);
     setLoading(true);
@@ -25,7 +26,6 @@ export default function RegisterPage() {
         body: JSON.stringify({ name, phone, email, password }),
       });
 
-      // after register -> go to dashboard
       router.replace("/");
       router.refresh();
     } catch (e: any) {
@@ -153,7 +153,6 @@ export default function RegisterPage() {
               background: "#eac4a1",
               color: "#0b4a66",
               fontWeight: 700,
-              cursor: loading ? "not-allowed" : "pointer",
             }}
           >
             {loading ? "Creating..." : "Register"}
