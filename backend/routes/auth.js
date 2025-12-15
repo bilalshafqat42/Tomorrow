@@ -1,8 +1,8 @@
+// backend/routes/auth.js
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -14,17 +14,21 @@ function signToken(user) {
   );
 }
 
-function setAuthCookie(res, token) {
-  const isProd = process.env.NODE_ENV === "production";
+// GET /api/auth/me
+router.get("/me", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Not authenticated" });
 
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? "none" : "lax",
-    path: "/",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-}
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("name email role");
+    if (!user) return res.status(401).json({ message: "Not authenticated" });
+
+    return res.json({ user });
+  } catch {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+});
 
 // POST /api/auth/register
 router.post("/register", async (req, res) => {
@@ -51,10 +55,9 @@ router.post("/register", async (req, res) => {
     });
 
     const token = signToken(user);
-    setAuthCookie(res, token);
 
     return res.json({
-      message: "Registered ✅",
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -86,10 +89,9 @@ router.post("/login", async (req, res) => {
     if (!ok) return res.status(401).json({ message: "Invalid credentials" });
 
     const token = signToken(user);
-    setAuthCookie(res, token);
 
     return res.json({
-      message: "Logged in ✅",
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -102,25 +104,9 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// GET /api/auth/me
-router.get("/me", requireAuth, async (req, res) => {
-  const user = await User.findById(req.userId).select("name email role phone");
-  if (!user) return res.status(401).json({ message: "Not authenticated" });
-  return res.json({ user });
-});
-
-// POST /api/auth/logout
+// POST /api/auth/logout (backend just responds)
 router.post("/logout", (req, res) => {
-  const isProd = process.env.NODE_ENV === "production";
-
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? "none" : "lax",
-    path: "/",
-  });
-
-  res.json({ message: "Logged out ✅" });
+  res.json({ message: "Logged out" });
 });
 
 export default router;
