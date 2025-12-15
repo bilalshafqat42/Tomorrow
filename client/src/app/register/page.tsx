@@ -1,21 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
-
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [err, setErr] = useState(null);
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(e) {
     e.preventDefault();
     setErr(null);
     setLoading(true);
@@ -28,7 +27,7 @@ export default function RegisterPage() {
 
       router.replace("/");
       router.refresh();
-    } catch (e: any) {
+    } catch (e) {
       setErr(e?.message || "Register failed");
     } finally {
       setLoading(false);
