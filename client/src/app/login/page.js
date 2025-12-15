@@ -9,107 +9,146 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
-  async function onSubmit(e) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setErr(null);
     setLoading(true);
+
     try {
       await api("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
+
+      // ✅ after login go to dashboard (your app/page.js)
       router.replace("/");
-    } catch (err) {
-      alert(err.message || "Login failed");
+      router.refresh();
+    } catch (e: any) {
+      setErr(e?.message || "Login failed");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={styles.page}>
-      <form onSubmit={onSubmit} style={styles.card}>
-        <div style={styles.logoWrap}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#0b4a66",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 24,
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          background: "white",
+          borderRadius: 18,
+          padding: 22,
+          boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+        }}
+      >
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 14 }}>
           <img
             src="/assets/images/tom-logo/horizontal-logo.svg"
             alt="Tomorrow"
-            style={styles.logo}
+            style={{ height: 42, objectFit: "contain" }}
+            onError={(e) => {
+              // if logo path not found, hide image
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
           />
+          <h2 style={{ margin: "12px 0 6px", color: "#0b4a66" }}>
+            Welcome Back
+          </h2>
+          <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
+            Login to continue to your dashboard
+          </p>
         </div>
 
-        <input
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        {err ? (
+          <div
+            style={{
+              background: "#fee2e2",
+              color: "#991b1b",
+              padding: "10px 12px",
+              borderRadius: 10,
+              fontSize: 13,
+              marginBottom: 12,
+            }}
+          >
+            {err}
+          </div>
+        ) : null}
 
-        <input
-          style={styles.input}
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <form onSubmit={onSubmit}>
+          <label style={{ fontSize: 13, color: "#0f172a" }}>Email</label>
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="bilal@test.com"
+            type="email"
+            required
+            style={{
+              width: "100%",
+              marginTop: 6,
+              marginBottom: 12,
+              padding: "12px 12px",
+              borderRadius: 12,
+              border: "1px solid #e2e8f0",
+              outline: "none",
+            }}
+          />
 
-        <button style={styles.btn} disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
+          <label style={{ fontSize: 13, color: "#0f172a" }}>Password</label>
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            type="password"
+            required
+            style={{
+              width: "100%",
+              marginTop: 6,
+              marginBottom: 14,
+              padding: "12px 12px",
+              borderRadius: 12,
+              border: "1px solid #e2e8f0",
+              outline: "none",
+            }}
+          />
 
-        <button
-          type="button"
-          style={styles.linkBtn}
-          onClick={() => router.push("/register")}
-        >
-          Create Account
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: "100%",
+              padding: "12px 14px",
+              borderRadius: 12,
+              border: "none",
+              background: "#eac4a1",
+              color: "#0b4a66",
+              fontWeight: 700,
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
+          >
+            {loading ? "Signing in..." : "Login"}
+          </button>
+
+          <div style={{ marginTop: 12, fontSize: 13, color: "#64748b" }}>
+            Don&apos;t have an account?{" "}
+            <a href="/register" style={{ color: "#0b4a66", fontWeight: 700 }}>
+              Register
+            </a>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    background: "#00416b",
-    display: "grid",
-    placeItems: "center",
-    padding: 24,
-  },
-  card: {
-    width: "100%",
-    maxWidth: 420,
-  },
-  logoWrap: { textAlign: "center", marginBottom: 14 },
-  logo: { height: 70, width: "auto" },
-  input: {
-    width: "100%",
-    padding: 14,
-    borderRadius: 10,
-    border: "1px solid rgba(255,255,255,0.25)",
-    background: "rgba(255,255,255,0.12)",
-    color: "white",
-    marginBottom: 12,
-    outline: "none",
-  },
-  btn: {
-    width: "100%",
-    padding: 14,
-    borderRadius: 10,
-    border: "none",
-    background: "#eac4a1",
-    color: "#00416b",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  linkBtn: {
-    marginTop: 12,
-    width: "100%",
-    padding: 12,
-    borderRadius: 10,
-    border: "1px solid rgba(255,255,255,0.25)",
-    background: "transparent",
-    color: "white",
-    cursor: "pointer",
-  },
-};

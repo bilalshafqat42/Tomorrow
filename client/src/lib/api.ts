@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE!;
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE!; // https://tomorrow-main.onrender.com
 
 export async function api(path: string, options: RequestInit = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -7,7 +7,7 @@ export async function api(path: string, options: RequestInit = {}) {
       "Content-Type": "application/json",
       ...(options.headers || {}),
     },
-    credentials: "include", // cookies
+    credentials: "include", // IMPORTANT for cookies
   });
 
   const data = await res.json().catch(() => ({}));

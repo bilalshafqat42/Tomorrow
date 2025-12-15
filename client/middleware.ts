@@ -1,29 +1,35 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-export function middleware(req: NextRequest) {
+const PUBLIC_ROUTES = ["/login", "/register", "/_next", "/favicon.ico"];
+
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // public routes
-  if (
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/register") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon") ||
-    pathname.startsWith("/assets")
-  ) {
+  // allow public routes
+  if (PUBLIC_ROUTES.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
-  const token = req.cookies.get("token")?.value;
+  // check auth by calling backend /me with cookies
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE;
+  if (!apiBase) return NextResponse.redirect(new URL("/login", req.url));
 
-  if (!token) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
+  const cookie = req.headers.get("cookie") || "";
 
-  return NextResponse.next();
+  try {
+    const res = await fetch(`${apiBase}/api/auth/me`, {
+      headers: { cookie },
+      // must include to forward cookie
+      credentials: "include" as any,
+      cache: "no-store",
+    });
+
+    if (res.ok) return NextResponse.next();
+  } catch (e) {}
+
+  // not logged in
+  return NextResponse.redirect(new URL("/login", req.url));
 }
 
 export const config = {
