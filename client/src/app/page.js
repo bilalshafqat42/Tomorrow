@@ -10,6 +10,12 @@ import { api } from "@/lib/api";
 const HomePage = () => {
   const mainLogo = "/assets/images/tom-logo/blue-color-logo.svg";
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) router.replace("/login");
+    else setReady(true);
+  }, []);
+
   const router = useRouter();
 
   async function logout() {
