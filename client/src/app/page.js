@@ -9,25 +9,32 @@ import { api } from "@/lib/api";
 
 export default function HomePage() {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) router.replace("/login");
-    else setReady(true);
+    async function checkAuth() {
+      try {
+        await api("/api/auth/me"); // if cookie valid => OK
+        setChecking(false);
+      } catch (e) {
+        router.replace("/login");
+      }
+    }
+    checkAuth();
   }, [router]);
 
   async function logout() {
     try {
       await api("/api/auth/logout", { method: "POST" });
-      localStorage.removeItem("token");
       router.replace("/login");
     } catch (err) {
       alert(err.message || "Logout failed");
     }
   }
 
-  if (!ready) return null;
+  if (checking) return null;
+
+  const mainLogo = "/assets/images/tom-logo/blue-color-logo.svg";
 
   return (
     <div className="min-h-screen w-screen overflow-hidden relative flex flex-col">
@@ -37,7 +44,7 @@ export default function HomePage() {
 
       <div className="flex-grow flex items-center justify-center relative z-30 pt-20 pb-40 mt-[-200px]">
         <img
-          src="/assets/images/tom-logo/blue-color-logo.svg"
+          src={mainLogo}
           className="w-[300px] md:w-[580px] h-auto transition-transform duration-500 hover:scale-105 rounded-3xl"
           alt="Tomorrow World Group"
         />

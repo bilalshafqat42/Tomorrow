@@ -6,10 +6,10 @@ import { api } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [err, setErr] = useState(null);
+  const [email, setEmail] = useState("bilal@test.com");
+  const [password, setPassword] = useState("123456");
   const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState(null);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -17,15 +17,15 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const data = await api("/api/auth/login", {
+      await api("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
 
-      localStorage.setItem("token", data.token);
-      router.replace("/");
+      router.replace("/"); // go to homepage (it will pass /me now)
+      router.refresh();
     } catch (e) {
-      setErr(e.message || "Login failed");
+      setErr(e?.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -35,7 +35,7 @@ export default function LoginPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#00416b",
+        background: "#0b4a66",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -56,12 +56,12 @@ export default function LoginPage() {
           <img
             src="/assets/images/tom-logo/horizontal-logo.svg"
             alt="Tomorrow"
-            style={{ height: 42 }}
+            style={{ height: 42, objectFit: "contain" }}
           />
-          <h2 style={{ margin: "12px 0 6px", color: "#00416b" }}>
+          <h2 style={{ margin: "12px 0 6px", color: "#0b4a66" }}>
             Welcome Back
           </h2>
-          <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
+          <p style={{ margin: 0, color: "#64748b", fontrememberSize: 13 }}>
             Login to continue
           </p>
         </div>
@@ -123,8 +123,9 @@ export default function LoginPage() {
               borderRadius: 12,
               border: "none",
               background: "#eac4a1",
-              color: "#00416b",
+              color: "#0b4a66",
               fontWeight: 700,
+              cursor: loading ? "not-allowed" : "pointer",
             }}
           >
             {loading ? "Signing in..." : "Login"}
@@ -132,7 +133,7 @@ export default function LoginPage() {
 
           <div style={{ marginTop: 12, fontSize: 13, color: "#64748b" }}>
             Don&apos;t have an account?{" "}
-            <a href="/register" style={{ color: "#00416b", fontWeight: 700 }}>
+            <a href="/register" style={{ color: "#0b4a66", fontWeight: 700 }}>
               Register
             </a>
           </div>
