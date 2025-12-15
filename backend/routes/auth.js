@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -14,11 +15,12 @@ function signToken(user) {
 }
 
 function setAuthCookie(res, token) {
-  // Works for Render HTTPS + cross-domain cookies
+  const isProd = process.env.NODE_ENV === "production";
+
   res.cookie("token", token, {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
     path: "/",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
@@ -52,6 +54,7 @@ router.post("/register", async (req, res) => {
     setAuthCookie(res, token);
 
     return res.json({
+      message: "Registered ✅",
       user: {
         id: user._id,
         name: user.name,
@@ -86,6 +89,7 @@ router.post("/login", async (req, res) => {
     setAuthCookie(res, token);
 
     return res.json({
+      message: "Logged in ✅",
       user: {
         id: user._id,
         name: user.name,
@@ -99,36 +103,24 @@ router.post("/login", async (req, res) => {
 });
 
 // GET /api/auth/me
-router.get("/me", async (req, res) => {
-  try {
-    const token =
-      req.headers.authorization?.replace("Bearer ", "") || req.cookies?.token;
-
-    // If you are NOT using cookie-parser, req.cookies won't exist.
-    // So we only rely on Authorization header here OR you can install cookie-parser.
-    if (!token) return res.status(401).json({ message: "Not authenticated" });
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("name email role");
-    if (!user) return res.status(401).json({ message: "Not authenticated" });
-
-    return res.json({ user });
-  } catch {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
+router.get("/me", requireAuth, async (req, res) => {
+  const user = await User.findById(req.userId).select("name email role phone");
+  if (!user) return res.status(401).json({ message: "Not authenticated" });
+  return res.json({ user });
 });
 
 // POST /api/auth/logout
 router.post("/logout", (req, res) => {
-  // clear cookie
-  res.cookie("token", "", {
+  const isProd = process.env.NODE_ENV === "production";
+
+  res.clearCookie("token", {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
     path: "/",
-    expires: new Date(0),
   });
-  res.json({ message: "Logged out" });
+
+  res.json({ message: "Logged out ✅" });
 });
 
 export default router;

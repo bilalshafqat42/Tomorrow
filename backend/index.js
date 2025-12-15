@@ -2,23 +2,13 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
 
 import authRoutes from "./routes/auth.js";
 
 dotenv.config();
 
 const app = express();
-
-/**
- * IMPORTANT:
- * For cookies to work between:
- * Front: https://tomorrow-app.onrender.com
- * Back:  https://tomorrow-main.onrender.com
- *
- * You MUST use:
- * - cors({ origin: FRONT_URL, credentials: true })
- * - res.cookie(... { sameSite:"none", secure:true })
- */
 
 const FRONT_URL = process.env.FRONT_URL || "https://tomorrow-app.onrender.com";
 
@@ -30,6 +20,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(cookieParser());
 
 // Health check
 app.get("/", (req, res) => {
@@ -54,7 +45,9 @@ async function start() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("MongoDB connected ✅");
 
-    app.listen(PORT, () => console.log(`Server running on port ${PORT} ✅`));
+    app.listen(PORT, "0.0.0.0", () =>
+      console.log(`Server running on port ${PORT} ✅`)
+    );
   } catch (err) {
     console.error("MongoDB connection error ❌", err.message);
     process.exit(1);
