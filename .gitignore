@@ -17,3 +17,7 @@ pnpm-debug.log*
 
 # mac
 .DS_Store
+client/public/assets/videos/
+client/public/assets/models/
+client/public/*.glb
+client/public/**/*.mp4
