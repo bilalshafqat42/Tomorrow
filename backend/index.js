@@ -3,27 +3,26 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
-
 import authRoutes from "./routes/auth.js";
 
 dotenv.config();
 
 const app = express();
 
-// IMPORTANT for Render / proxies (secure cookies)
+// Required for secure cookies behind Render proxy
 app.set("trust proxy", 1);
 
-// Allowed frontend URLs (web)
 const ALLOWED = [
   process.env.FRONT_URL || "https://tomorrow-app.onrender.com",
-  "https://www.tomorrow-app.onrender.com",
+  "https://tomorrow-app.onrender.com",
+  "http://localhost:3000",
 ];
 
-// CORS (must allow cookies)
+// CORS (allow cookies)
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // Postman / server-to-server
+      if (!origin) return cb(null, true); // Postman/server-to-server
       if (ALLOWED.includes(origin)) return cb(null, true);
       return cb(new Error("Not allowed by CORS: " + origin));
     },
@@ -34,7 +33,7 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// Health check
+// Health
 app.get("/", (req, res) => {
   res.json({ message: "Backend is working ✅" });
 });
