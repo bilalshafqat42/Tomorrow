@@ -20,12 +20,9 @@ app.use(
 );
 
 app.use(express.json());
-app.use(cookieParser());
+app.use(cookieParser()); // ✅ ADD THIS
 
-// Health check
-app.get("/", (req, res) => {
-  res.json({ message: "Backend is working ✅" });
-});
+app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
 
 app.use("/api/auth", authRoutes);
 
@@ -45,9 +42,7 @@ async function start() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("MongoDB connected ✅");
 
-    app.listen(PORT, "0.0.0.0", () =>
-      console.log(`Server running on port ${PORT} ✅`)
-    );
+    app.listen(PORT, () => console.log(`Server running on port ${PORT} ✅`));
   } catch (err) {
     console.error("MongoDB connection error ❌", err.message);
     process.exit(1);
