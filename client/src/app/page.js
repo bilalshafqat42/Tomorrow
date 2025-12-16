@@ -52,8 +52,13 @@ export default function HomePage() {
         <source src="/assets/videos/bg-video.mp4" type="video/mp4" />
       </video>
 
-      {/* Optional dark overlay */}
-      <div className="absolute inset-0 bg-black/10 z-10" />
+      {/* BLUR + GLASS OVERLAY (same style as your sample page) */}
+      <div className="absolute inset-0 z-10">
+        {/* soft dark tint */}
+        <div className="absolute inset-0 bg-black/25" />
+        {/* glass blur */}
+        <div className="absolute inset-0 backdrop-blur-md" />
+      </div>
 
       {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 z-50">
