@@ -1,4 +1,3 @@
-// backend/routes/auth.js
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -14,23 +13,18 @@ function signToken(user) {
   );
 }
 
-// GET /api/auth/me
-router.get("/me", async (req, res) => {
-  try {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Not authenticated" });
+function setAuthCookie(res, token) {
+  // ✅ Works cross-domain with HTTPS (Render)
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("name email role");
-    if (!user) return res.status(401).json({ message: "Not authenticated" });
-
-    return res.json({ user });
-  } catch {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
-});
-
-// POST /api/auth/register
+// ✅ POST /api/auth/register
 router.post("/register", async (req, res) => {
   try {
     const { name, email, phone, password } = req.body || {};
@@ -55,8 +49,11 @@ router.post("/register", async (req, res) => {
     });
 
     const token = signToken(user);
+    setAuthCookie(res, token);
 
+    // ✅ Return token too (good for React Native)
     return res.json({
+      message: "Registered ✅",
       token,
       user: {
         id: user._id,
@@ -72,7 +69,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// POST /api/auth/login
+// ✅ POST /api/auth/login
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body || {};
@@ -89,8 +86,10 @@ router.post("/login", async (req, res) => {
     if (!ok) return res.status(401).json({ message: "Invalid credentials" });
 
     const token = signToken(user);
+    setAuthCookie(res, token);
 
     return res.json({
+      message: "Logged in ✅",
       token,
       user: {
         id: user._id,
@@ -104,9 +103,40 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// POST /api/auth/logout (backend just responds)
+// ✅ GET /api/auth/me  (COOKIE OR BEARER TOKEN)
+router.get("/me", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || "";
+    const bearerToken = authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : null;
+
+    const cookieToken = req.cookies?.token || null;
+
+    const token = bearerToken || cookieToken;
+    if (!token) return res.status(401).json({ message: "Not authenticated" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id).select("name email role");
+    if (!user) return res.status(401).json({ message: "Not authenticated" });
+
+    return res.json({ user });
+  } catch (err) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+});
+
+// ✅ POST /api/auth/logout
 router.post("/logout", (req, res) => {
-  res.json({ message: "Logged out" });
+  res.cookie("token", "", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/",
+    expires: new Date(0),
+  });
+  res.json({ message: "Logged out ✅" });
 });
 
 export default router;
