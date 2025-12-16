@@ -8,10 +8,14 @@ export async function api(path, options = {}) {
       "Content-Type": "application/json",
       ...(options.headers || {}),
     },
-    credentials: "include", // REQUIRED for cookies
+    credentials: "include", // IMPORTANT for cookies
   });
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || "Request failed");
+
+  if (!res.ok) {
+    throw new Error(data.message || "Request failed");
+  }
+
   return data;
 }

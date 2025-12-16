@@ -1,17 +1,19 @@
-// client/middleware.js
 import { NextResponse } from "next/server";
 
-const PUBLIC_ROUTES = ["/login", "/register", "/_next", "/favicon.ico"];
+const PUBLIC = ["/login", "/register", "/_next", "/favicon.ico"];
 
 export function middleware(req) {
   const { pathname } = req.nextUrl;
 
-  // allow public routes
-  const isPublic = PUBLIC_ROUTES.some((p) => pathname.startsWith(p));
-  if (isPublic) return NextResponse.next();
+  // Allow public routes
+  if (PUBLIC.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
 
-  // check cookie token
+  // Check cookie token
   const token = req.cookies.get("token")?.value;
+
+  // If no token => go to login
   if (!token) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
@@ -22,5 +24,5 @@ export function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/((?!api).*)"], // run on all pages except /api
+  matcher: ["/((?!api).*)"],
 };

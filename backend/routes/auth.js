@@ -14,7 +14,7 @@ function signToken(user) {
 }
 
 function setAuthCookie(res, token) {
-  // ✅ Works cross-domain with HTTPS (Render)
+  // Works cross-domain with HTTPS (Render)
   res.cookie("token", token, {
     httpOnly: true,
     secure: true,
@@ -24,26 +24,29 @@ function setAuthCookie(res, token) {
   });
 }
 
-// ✅ POST /api/auth/register
+// POST /api/auth/register
 router.post("/register", async (req, res) => {
   try {
     const { name, email, phone, password } = req.body || {};
+
     if (!name || !email || !password) {
       return res
         .status(400)
         .json({ message: "name, email, password are required" });
     }
 
-    const exists = await User.findOne({ email: email.toLowerCase() });
+    const emailLower = email.toLowerCase().trim();
+
+    const exists = await User.findOne({ email: emailLower });
     if (exists)
       return res.status(409).json({ message: "Email already exists" });
 
     const passwordHash = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name,
-      email: email.toLowerCase(),
-      phone: phone || "",
+      name: name.trim(),
+      email: emailLower,
+      phone: (phone || "").trim(),
       passwordHash,
       role: "client",
     });
@@ -51,10 +54,9 @@ router.post("/register", async (req, res) => {
     const token = signToken(user);
     setAuthCookie(res, token);
 
-    // ✅ Return token too (good for React Native)
     return res.json({
       message: "Registered ✅",
-      token,
+      token, // good for React Native
       user: {
         id: user._id,
         name: user.name,
@@ -69,17 +71,20 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ✅ POST /api/auth/login
+// POST /api/auth/login
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body || {};
+
     if (!email || !password) {
       return res
         .status(400)
         .json({ message: "email and password are required" });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const emailLower = email.toLowerCase().trim();
+
+    const user = await User.findOne({ email: emailLower });
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
     const ok = await bcrypt.compare(password, user.passwordHash);
@@ -103,7 +108,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ✅ GET /api/auth/me  (COOKIE OR BEARER TOKEN)
+// GET /api/auth/me (COOKIE OR BEARER TOKEN)
 router.get("/me", async (req, res) => {
   try {
     const authHeader = req.headers.authorization || "";
@@ -127,7 +132,7 @@ router.get("/me", async (req, res) => {
   }
 });
 
-// ✅ POST /api/auth/logout
+// POST /api/auth/logout
 router.post("/logout", (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,
@@ -136,6 +141,7 @@ router.post("/logout", (req, res) => {
     path: "/",
     expires: new Date(0),
   });
+
   res.json({ message: "Logged out ✅" });
 });
 

@@ -17,12 +17,17 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // 1) login (sets cookie on backend)
       await api("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
 
-      router.replace("/"); // go to homepage (it will pass /me now)
+      // 2) test cookie is stored + sent back
+      const me = await api("/api/auth/me", { method: "GET" });
+      console.log("ME:", me);
+
+      router.replace("/");
       router.refresh();
     } catch (e) {
       setErr(e?.message || "Login failed");
@@ -57,11 +62,12 @@ export default function LoginPage() {
             src="/assets/images/tom-logo/horizontal-logo.svg"
             alt="Tomorrow"
             style={{ height: 42, objectFit: "contain" }}
+            onError={(e) => (e.currentTarget.style.display = "none")}
           />
           <h2 style={{ margin: "12px 0 6px", color: "#0b4a66" }}>
             Welcome Back
           </h2>
-          <p style={{ margin: 0, color: "#64748b", fontrememberSize: 13 }}>
+          <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
             Login to continue
           </p>
         </div>
@@ -86,6 +92,7 @@ export default function LoginPage() {
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="bilal@test.com"
             type="email"
             required
             style={{
@@ -102,6 +109,7 @@ export default function LoginPage() {
           <input
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
             type="password"
             required
             style={{

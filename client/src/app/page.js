@@ -27,6 +27,7 @@ export default function HomePage() {
     try {
       await api("/api/auth/logout", { method: "POST" });
       router.replace("/login");
+      router.refresh();
     } catch (err) {
       alert(err.message || "Logout failed");
     }

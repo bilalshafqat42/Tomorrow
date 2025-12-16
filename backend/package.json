@@ -1,7 +1,6 @@
 {
   "name": "tomorrow-backend",
   "version": "1.0.0",
-  "description": "Backend API for Tomorrow web & mobile apps",
   "private": true,
   "type": "module",
   "main": "index.js",

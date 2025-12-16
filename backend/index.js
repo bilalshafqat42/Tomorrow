@@ -10,15 +10,23 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Important for Render/Proxies (secure cookies)
+// IMPORTANT for Render / proxies (secure cookies)
 app.set("trust proxy", 1);
 
-const FRONT_URL = process.env.FRONT_URL || "https://tomorrow-app.onrender.com";
+// Allowed frontend URLs (web)
+const ALLOWED = [
+  process.env.FRONT_URL || "https://tomorrow-app.onrender.com",
+  "https://www.tomorrow-app.onrender.com",
+];
 
-// ✅ CORS must allow cookies
+// CORS (must allow cookies)
 app.use(
   cors({
-    origin: FRONT_URL,
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true); // Postman / server-to-server
+      if (ALLOWED.includes(origin)) return cb(null, true);
+      return cb(new Error("Not allowed by CORS: " + origin));
+    },
     credentials: true,
   })
 );
@@ -26,12 +34,12 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ Health check
+// Health check
 app.get("/", (req, res) => {
   res.json({ message: "Backend is working ✅" });
 });
 
-// ✅ Routes
+// Routes
 app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 4000;
