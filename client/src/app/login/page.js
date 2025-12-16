@@ -60,7 +60,7 @@ export default function LoginPage() {
           {/* Logo */}
 
           {/* Card */}
-          <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl p-6 md:p-7">
+          <div className="rounded-2xl border border-white/20 bg-white/30 backdrop-blur-xl shadow-2xl p-6 md:p-9">
             <div className="mb-4 text-center">
               <div className="flex justify-center mb-8">
                 <img
@@ -83,7 +83,7 @@ export default function LoginPage() {
 
             <form onSubmit={onSubmit} className="space-y-3">
               <div>
-                <label className="text-white/80 text-sm">Email</label>
+                <label className="text-[#191919] text-sm">Email</label>
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -101,7 +101,7 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label className="text-white/80 text-sm">Password</label>
+                <label className="text-[#191919] text-sm">Password</label>
                 <input
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
