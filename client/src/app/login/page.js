@@ -1,13 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("bilal@test.com");
-  const [password, setPassword] = useState("123456");
+
+  const mainLogo = "/assets/images/tom-logo/blue-color-logo.svg";
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
 
@@ -17,15 +21,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 1) login (sets cookie on backend)
       await api("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-
-      // 2) test cookie is stored + sent back
-      const me = await api("/api/auth/me", { method: "GET" });
-      console.log("ME:", me);
 
       router.replace("/");
       router.refresh();
@@ -37,115 +36,128 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#0b4a66",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          background: "white",
-          borderRadius: 18,
-          padding: 22,
-          boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-        }}
+    <div className="min-h-screen w-screen overflow-hidden relative flex flex-col">
+      {/* Background Video */}
+      <video
+        className="absolute inset-0 w-full h-full object-cover z-0"
+        autoPlay
+        loop
+        muted
+        playsInline
       >
-        <div style={{ textAlign: "center", marginBottom: 14 }}>
-          <img
-            src="/assets/images/tom-logo/horizontal-logo.svg"
-            alt="Tomorrow"
-            style={{ height: 42, objectFit: "contain" }}
-            onError={(e) => (e.currentTarget.style.display = "none")}
-          />
-          <h2 style={{ margin: "12px 0 6px", color: "#0b4a66" }}>
-            Welcome Back
-          </h2>
-          <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
-            Login to continue
-          </p>
+        <source src="/assets/videos/bg-video.mp4" type="video/mp4" />
+      </video>
+
+      {/* BLUR + GLASS OVERLAY */}
+      <div className="absolute inset-0 z-10">
+        <div className="absolute inset-0 bg-black/25" />
+        <div className="absolute inset-0 backdrop-blur-md" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-30 flex-grow flex items-center justify-center px-6 pt-28 pb-16">
+        <div className="w-full max-w-[440px]">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <img
+              src={mainLogo}
+              className="w-[240px] md:w-[320px] h-auto transition-transform duration-500 hover:scale-105 rounded-3xl"
+              alt="Tomorrow World Group"
+            />
+          </div>
+
+          {/* Card */}
+          <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl p-6 md:p-7">
+            <div className="mb-4 text-center">
+              <h1 className="text-white text-2xl font-semibold">
+                Welcome Back
+              </h1>
+              <p className="text-white/70 text-sm mt-1">Login to continue</p>
+            </div>
+
+            {err ? (
+              <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/15 px-4 py-3 text-sm text-red-100">
+                {err}
+              </div>
+            ) : null}
+
+            <form onSubmit={onSubmit} className="space-y-3">
+              <div>
+                <label className="text-white/80 text-sm">Email</label>
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="bilal@test.com"
+                  type="email"
+                  required
+                  className="
+                    mt-2 w-full rounded-xl px-4 py-3
+                    bg-white/90 text-slate-900
+                    border border-white/40
+                    outline-none
+                    focus:ring-2 focus:ring-[#EAC4A1]/70
+                  "
+                />
+              </div>
+
+              <div>
+                <label className="text-white/80 text-sm">Password</label>
+                <input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  type="password"
+                  required
+                  className="
+                    mt-2 w-full rounded-xl px-4 py-3
+                    bg-white/90 text-slate-900
+                    border border-white/40
+                    outline-none
+                    focus:ring-2 focus:ring-[#EAC4A1]/70
+                  "
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="
+                  w-full mt-2 rounded-xl px-4 py-3
+                  bg-[#EAC4A1] text-[#0b4a66] font-bold
+                  hover:opacity-95 active:opacity-90
+                  disabled:opacity-60 disabled:cursor-not-allowed
+                  transition
+                "
+              >
+                {loading ? "Signing in..." : "Login"}
+              </button>
+
+              <div className="flex items-center justify-between pt-2 text-sm">
+                <div className="text-white/70">Don&apos;t have an account?</div>
+                <Link
+                  href="/register"
+                  className="text-[#EAC4A1] font-semibold hover:underline"
+                >
+                  Register
+                </Link>
+              </div>
+
+              <div className="pt-2 text-center">
+                <Link
+                  href="/"
+                  className="text-white/60 text-xs hover:underline"
+                >
+                  Back to Home
+                </Link>
+              </div>
+            </form>
+          </div>
+
+          {/* Small footer */}
+          <div className="text-center mt-5 text-white/40 text-xs">
+            Tomorrow World Group
+          </div>
         </div>
-
-        {err ? (
-          <div
-            style={{
-              background: "#fee2e2",
-              color: "#991b1b",
-              padding: "10px 12px",
-              borderRadius: 10,
-              fontSize: 13,
-              marginBottom: 12,
-            }}
-          >
-            {err}
-          </div>
-        ) : null}
-
-        <form onSubmit={onSubmit}>
-          <label style={{ fontSize: 13, color: "#0f172a" }}>Email</label>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="bilal@test.com"
-            type="email"
-            required
-            style={{
-              width: "100%",
-              marginTop: 6,
-              marginBottom: 12,
-              padding: "12px 12px",
-              borderRadius: 12,
-              border: "1px solid #e2e8f0",
-            }}
-          />
-
-          <label style={{ fontSize: 13, color: "#0f172a" }}>Password</label>
-          <input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            type="password"
-            required
-            style={{
-              width: "100%",
-              marginTop: 6,
-              marginBottom: 14,
-              padding: "12px 12px",
-              borderRadius: 12,
-              border: "1px solid #e2e8f0",
-            }}
-          />
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "12px 14px",
-              borderRadius: 12,
-              border: "none",
-              background: "#eac4a1",
-              color: "#0b4a66",
-              fontWeight: 700,
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
-          >
-            {loading ? "Signing in..." : "Login"}
-          </button>
-
-          <div style={{ marginTop: 12, fontSize: 13, color: "#64748b" }}>
-            Don&apos;t have an account?{" "}
-            <a href="/register" style={{ color: "#0b4a66", fontWeight: 700 }}>
-              Register
-            </a>
-          </div>
-        </form>
       </div>
     </div>
   );
