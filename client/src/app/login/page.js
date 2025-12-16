@@ -58,17 +58,17 @@ export default function LoginPage() {
       <div className="relative z-30 flex-grow flex items-center justify-center px-6 pt-28 pb-16">
         <div className="w-full max-w-[440px]">
           {/* Logo */}
-          <div className="flex justify-center mb-8">
-            <img
-              src={mainLogo}
-              className="w-[240px] md:w-[320px] h-auto transition-transform duration-500 hover:scale-105 rounded-3xl"
-              alt="Tomorrow World Group"
-            />
-          </div>
 
           {/* Card */}
           <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl p-6 md:p-7">
             <div className="mb-4 text-center">
+              <div className="flex justify-center mb-8">
+                <img
+                  src={mainLogo}
+                  className="w-[240px] md:w-[320px] h-auto transition-transform duration-500 hover:scale-105 rounded-3xl"
+                  alt="Tomorrow World Group"
+                />
+              </div>
               <h1 className="text-white text-2xl font-semibold">
                 Welcome Back
               </h1>
@@ -87,7 +87,7 @@ export default function LoginPage() {
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="bilal@test.com"
+                  placeholder="Email Address"
                   type="email"
                   required
                   className="
@@ -132,7 +132,7 @@ export default function LoginPage() {
                 {loading ? "Signing in..." : "Login"}
               </button>
 
-              <div className="flex items-center justify-between pt-2 text-sm">
+              {/* <div className="flex items-center justify-between pt-2 text-sm">
                 <div className="text-white/70">Don&apos;t have an account?</div>
                 <Link
                   href="/register"
@@ -140,16 +140,16 @@ export default function LoginPage() {
                 >
                   Register
                 </Link>
-              </div>
+              </div> */}
 
-              <div className="pt-2 text-center">
+              {/* <div className="pt-2 text-center">
                 <Link
                   href="/"
                   className="text-white/60 text-xs hover:underline"
                 >
                   Back to Home
                 </Link>
-              </div>
+              </div> */}
             </form>
           </div>
 
