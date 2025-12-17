@@ -3,42 +3,49 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
+
 import authRoutes from "./routes/auth.js";
 
 dotenv.config();
 
 const app = express();
 
-// Required for secure cookies behind Render proxy
+// ✅ Required on Render so secure cookies work behind proxy
 app.set("trust proxy", 1);
 
-const ALLOWED = [
-  process.env.FRONT_URL || "https://tomorrow-app.onrender.com",
-  "https://tomorrow-app.onrender.com",
-  "http://localhost:3000",
+// ✅ Your Next.js domain (Render static web service)
+const FRONT_URL = process.env.FRONT_URL || "https://tomorrow-app.onrender.com";
+
+// ✅ Add extra allowed variants (optional but helpful)
+const ALLOWED_ORIGINS = [
+  FRONT_URL,
+  FRONT_URL.replace("https://", "http://"),
+  "https://www.tomorrow-app.onrender.com",
 ];
 
-// CORS (allow cookies)
+// ✅ CORS (cookies enabled)
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // Postman/server-to-server
-      if (ALLOWED.includes(origin)) return cb(null, true);
+      // allow Postman / server-to-server (no origin)
+      if (!origin) return cb(null, true);
+
+      if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+
       return cb(new Error("Not allowed by CORS: " + origin));
     },
     credentials: true,
   })
 );
 
+// ✅ Parsers
 app.use(express.json());
 app.use(cookieParser());
 
-// Health
-app.get("/", (req, res) => {
-  res.json({ message: "Backend is working ✅" });
-});
+// ✅ Health check
+app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
 
-// Routes
+// ✅ Routes
 app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 4000;
