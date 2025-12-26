@@ -197,3 +197,37 @@ export const logout = async (req, res) => {
   clearAuthCookie(res);
   return res.json({ message: "Logged out ✅" });
 };
+
+// PATCH /api/auth/me
+export const updateMe = async (req, res) => {
+  try {
+    const token = getTokenFromRequest(req);
+    if (!token) return res.status(401).json({ message: "Not authenticated" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const name = String(req.body?.name ?? "").trim();
+    const phone = String(req.body?.phone ?? "").trim();
+    const address = String(req.body?.address ?? "").trim();
+    const image = String(req.body?.image ?? "").trim();
+    const language = String(req.body?.language ?? "").trim() || "English";
+
+    // Only allow safe fields to update (role/email not allowed here)
+    const update = {
+      ...(name ? { name } : {}),
+      phone,
+      address,
+      image,
+      language,
+    };
+
+    const user = await User.findByIdAndUpdate(decoded.id, update, {
+      new: true,
+      runValidators: true,
+    }).select("name email phone address image language role");
+
+    return res.json({ message: "Profile updated ✅", user });
+  } catch (err) {
+    return res.status(400).json({ message: err.message || "Update failed" });
+  }
+};
