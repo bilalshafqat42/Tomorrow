@@ -1,4 +1,4 @@
-// index.js
+// backend/index.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -18,15 +18,14 @@ const app = express();
 app.set("trust proxy", 1);
 
 /**
- * ✅ Frontend URL (your web app domain)
+ * ✅ Frontend URL (web app)
  * Example: https://tomorrow-app.onrender.com
  */
 const FRONT_URL = process.env.FRONT_URL || "https://tomorrow-app.onrender.com";
 
 /**
- * ✅ CORS origins
- * - Keep this strict for production
- * - Add your Expo dev URL if needed while testing
+ * ✅ Allowed Origins
+ * Add Expo dev URLs later if needed (while testing locally)
  */
 const ALLOWED_ORIGINS = [
   FRONT_URL,
@@ -34,11 +33,11 @@ const ALLOWED_ORIGINS = [
   "https://www.tomorrow-app.onrender.com",
 ];
 
-// ✅ Middleware: CORS (supports cookies + bearer token)
+// ✅ CORS
 app.use(
   cors({
     origin: (origin, cb) => {
-      // allow Postman / server-to-server / mobile apps (no origin header sometimes)
+      // allow Postman / server-to-server / some mobile requests (no origin)
       if (!origin) return cb(null, true);
 
       if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
@@ -55,16 +54,13 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// ✅ Ensure uploads folder exists
-const __dirnameFull = path.resolve();
-const UPLOAD_DIR = path.join(__dirnameFull, "uploads");
+// ✅ Upload folder create + static serve
+const ROOT_DIR = path.resolve();
+const UPLOAD_DIR = path.join(ROOT_DIR, "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-/**
- * ✅ Serve uploaded files publicly
- * Your uploaded image URL will look like:
- * https://tomorrow-main.onrender.com/uploads/<filename>
- */
+// Public access:
+// https://tomorrow-main.onrender.com/uploads/avatars/<file>
 app.use("/uploads", express.static(UPLOAD_DIR));
 
 // ✅ Health check
