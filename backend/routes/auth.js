@@ -111,10 +111,10 @@ router.post("/register", async (req, res) => {
     const user = await User.create({
       name,
       email,
-      phone,
-      address,
-      image,
-      language,
+      phone: phone || "",
+      address: address || "",
+      image: image || "",
+      language: language || "English",
       passwordHash,
       role: "client",
     });
