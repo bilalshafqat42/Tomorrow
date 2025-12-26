@@ -206,28 +206,31 @@ export const updateMe = async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const name = String(req.body?.name ?? "").trim();
-    const phone = String(req.body?.phone ?? "").trim();
-    const address = String(req.body?.address ?? "").trim();
-    const image = String(req.body?.image ?? "").trim();
-    const language = String(req.body?.language ?? "").trim() || "English";
+    // only allow these fields from client
+    const name = String(req.body?.name || "").trim();
+    const phone = String(req.body?.phone || "").trim();
+    const address = String(req.body?.address || "").trim();
+    const language = normalizeLanguage(req.body?.language);
+    const image = String(req.body?.image || "").trim();
 
-    // Only allow safe fields to update (role/email not allowed here)
-    const update = {
-      ...(name ? { name } : {}),
-      phone,
-      address,
-      image,
-      language,
-    };
+    if (image && !isLikelyUrl(image)) {
+      return res.status(400).json({ message: "Image must be a valid URL" });
+    }
 
-    const user = await User.findByIdAndUpdate(decoded.id, update, {
-      new: true,
-      runValidators: true,
-    }).select("name email phone address image language role");
+    const user = await User.findByIdAndUpdate(
+      decoded.id,
+      {
+        ...(name ? { name } : {}),
+        phone,
+        address,
+        language,
+        image,
+      },
+      { new: true }
+    ).select("name email phone address image language role");
 
-    return res.json({ message: "Profile updated ✅", user });
+    return res.json({ user });
   } catch (err) {
-    return res.status(400).json({ message: err.message || "Update failed" });
+    return res.status(401).json({ message: "Not authenticated" });
   }
 };
