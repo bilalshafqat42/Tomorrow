@@ -27,11 +27,10 @@ function signToken(user) {
 }
 
 function setAuthCookie(res, token) {
-  // Web: cross-domain cookie for Render (HTTPS)
   res.cookie("token", token, {
     httpOnly: true,
-    secure: true, // must be true on Render (https)
-    sameSite: "none", // allow cross-site cookie
+    secure: true,
+    sameSite: "none",
     path: "/",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
@@ -48,24 +47,37 @@ function clearAuthCookie(res) {
 }
 
 function getTokenFromRequest(req) {
-  // Mobile (Bearer) OR Web (cookie)
   const auth = req.headers.authorization || "";
   const bearer = auth.startsWith("Bearer ") ? auth.slice(7) : null;
   const cookieToken = req.cookies?.token || null;
   return bearer || cookieToken || null;
 }
 
+// Optional: keep language values clean
+function normalizeLanguage(lang) {
+  const v = String(lang || "").trim();
+  return v || "English";
+}
+
+// Optional: basic URL check for image
+function isLikelyUrl(str) {
+  const v = String(str || "").trim();
+  if (!v) return true; // allow empty
+  return /^https?:\/\/.+/i.test(v);
+}
+
 /**
  * ✅ POST /api/auth/register
- * Works for BOTH:
- * - Web: sets cookie
- * - Mobile: returns token
+ * - role is ALWAYS client (hidden from frontend)
  */
 router.post("/register", async (req, res) => {
   try {
     const name = String(req.body?.name || "").trim();
     const email = normalizeEmail(req.body?.email);
     const phone = String(req.body?.phone || "").trim();
+    const address = String(req.body?.address || "").trim();
+    const image = String(req.body?.image || "").trim();
+    const language = normalizeLanguage(req.body?.language);
     const password = String(req.body?.password || "");
 
     if (!name || !email || !password) {
@@ -84,17 +96,25 @@ router.post("/register", async (req, res) => {
         .json({ message: "Password must be at least 6 characters" });
     }
 
+    if (!isLikelyUrl(image)) {
+      return res.status(400).json({ message: "image must be a valid URL" });
+    }
+
     const exists = await User.findOne({ email });
-    if (exists)
+    if (exists) {
       return res.status(409).json({ message: "Email already exists" });
+    }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Default role: client (you can change later)
+    // ✅ role forced to client (ignore frontend role completely)
     const user = await User.create({
       name,
       email,
       phone,
+      address,
+      image,
+      language,
       passwordHash,
       role: "client",
     });
@@ -104,12 +124,15 @@ router.post("/register", async (req, res) => {
 
     return res.json({
       message: "Registered ✅",
-      token, // ✅ mobile will store this
+      token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
+        address: user.address,
+        image: user.image,
+        language: user.language,
         role: user.role,
       },
     });
@@ -122,9 +145,6 @@ router.post("/register", async (req, res) => {
 
 /**
  * ✅ POST /api/auth/login
- * Works for BOTH:
- * - Web: sets cookie
- * - Mobile: returns token
  */
 router.post("/login", async (req, res) => {
   try {
@@ -148,12 +168,15 @@ router.post("/login", async (req, res) => {
 
     return res.json({
       message: "Logged in ✅",
-      token, // ✅ mobile will store this
+      token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
+        address: user.address,
+        image: user.image,
+        language: user.language,
         role: user.role,
       },
     });
@@ -166,9 +189,6 @@ router.post("/login", async (req, res) => {
 
 /**
  * ✅ GET /api/auth/me
- * Works for BOTH:
- * - Web: reads cookie
- * - Mobile: reads Bearer token
  */
 router.get("/me", async (req, res) => {
   try {
@@ -178,7 +198,7 @@ router.get("/me", async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findById(decoded.id).select(
-      "name email phone role"
+      "name email phone address image language role"
     );
     if (!user) return res.status(401).json({ message: "Not authenticated" });
 
@@ -188,6 +208,9 @@ router.get("/me", async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        address: user.address,
+        image: user.image,
+        language: user.language,
         role: user.role,
       },
     });
@@ -198,8 +221,6 @@ router.get("/me", async (req, res) => {
 
 /**
  * ✅ POST /api/auth/logout
- * Web: clears cookie
- * Mobile: you just delete token locally
  */
 router.post("/logout", (req, res) => {
   clearAuthCookie(res);
