@@ -18,30 +18,64 @@ const app = express();
 app.set("trust proxy", 1);
 
 /**
+ * Upload directories (single source of truth)
+ * IMPORTANT: process.cwd() is stable for your current setup
+ */
+const ROOT_DIR = process.cwd();
+const UPLOAD_DIR = path.join(ROOT_DIR, "uploads");
+const AVATAR_DIR = path.join(UPLOAD_DIR, "avatars");
+
+// ✅ Ensure upload folders exist
+fs.mkdirSync(AVATAR_DIR, { recursive: true });
+
+/**
  * ✅ Frontend URL (web app)
- * Example: https://tomorrow-app.onrender.com
  */
 const FRONT_URL = process.env.FRONT_URL || "https://tomorrow-app.onrender.com";
 
 /**
+ * ✅ Extra origins (optional)
+ * Add comma-separated origins in env if needed:
+ * EXTRA_ORIGINS=https://example.com,http://localhost:19006
+ */
+const EXTRA_ORIGINS = (process.env.EXTRA_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+/**
  * ✅ Allowed Origins
- * Add Expo dev URLs later if needed (while testing locally)
+ * - Web app
+ * - Optional extras
+ * - Expo dev URLs (common)
  */
 const ALLOWED_ORIGINS = [
   FRONT_URL,
   FRONT_URL.replace("https://", "http://"),
   "https://www.tomorrow-app.onrender.com",
+
+  // Expo dev / localhost (safe for development)
+  "http://localhost:19000",
+  "http://localhost:19006",
+  "http://localhost:8081",
+  "http://127.0.0.1:19000",
+  "http://127.0.0.1:19006",
+  "http://127.0.0.1:8081",
+
+  ...EXTRA_ORIGINS,
 ];
 
 // ✅ CORS
 app.use(
   cors({
     origin: (origin, cb) => {
-      // allow Postman / server-to-server / some mobile requests (no origin)
+      // ✅ allow Postman / server-to-server / many mobile requests (no Origin header)
       if (!origin) return cb(null, true);
 
       if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
 
+      // Allow any Expo dev origin like exp:// or null is already handled,
+      // but browser might send something else — keep strict.
       return cb(new Error("Not allowed by CORS: " + origin));
     },
     credentials: true,
@@ -54,11 +88,7 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// ✅ Upload folder create + static serve
-const ROOT_DIR = path.resolve();
-const UPLOAD_DIR = path.join(ROOT_DIR, "uploads");
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
+// ✅ Static serve uploads
 // Public access:
 // https://tomorrow-main.onrender.com/uploads/avatars/<file>
 app.use("/uploads", express.static(UPLOAD_DIR));
