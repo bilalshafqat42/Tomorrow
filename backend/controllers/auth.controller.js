@@ -1,3 +1,4 @@
+// backend/controllers/auth.controller.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
@@ -13,10 +14,16 @@ const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 const normalizeLanguage = (lang) => String(lang || "").trim() || "English";
 
-const isLikelyUrl = (str) => {
+/**
+ * Accept:
+ * - empty string (means "no image")
+ * - full http/https URL
+ * - relative uploaded path: /uploads/...
+ */
+const isValidImageValue = (str) => {
   const v = String(str || "").trim();
   if (!v) return true;
-  return /^https?:\/\/.+/i.test(v);
+  return /^https?:\/\/.+/i.test(v) || v.startsWith("/uploads/");
 };
 
 const signToken = (user) =>
@@ -81,8 +88,11 @@ export const register = async (req, res) => {
         .json({ message: "Password must be at least 6 characters" });
     }
 
-    if (!isLikelyUrl(image)) {
-      return res.status(400).json({ message: "Image must be a valid URL" });
+    // ✅ allow /uploads/... too
+    if (!isValidImageValue(image)) {
+      return res
+        .status(400)
+        .json({ message: "Image must be a valid URL or /uploads/... path" });
     }
 
     const exists = await User.findOne({ email });
@@ -139,7 +149,7 @@ export const login = async (req, res) => {
         .json({ message: "email and password are required" });
     }
 
-    // 🔴 IMPORTANT FIX HERE
+    // ✅ ensures passwordHash is included
     const user = await User.findOne({ email }).select("+passwordHash");
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -206,28 +216,51 @@ export const updateMe = async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // only allow these fields from client
-    const name = String(req.body?.name || "").trim();
-    const phone = String(req.body?.phone || "").trim();
-    const address = String(req.body?.address || "").trim();
-    const language = normalizeLanguage(req.body?.language);
-    const image = String(req.body?.image || "").trim();
+    /**
+     * ✅ IMPORTANT FIX:
+     * Only update fields if they are actually present in req.body.
+     * This prevents wiping image to "" when you update phone/address/etc.
+     */
+    const updates = {};
 
-    if (image && !isLikelyUrl(image)) {
-      return res.status(400).json({ message: "Image must be a valid URL" });
+    if (typeof req.body?.name === "string") {
+      const name = req.body.name.trim();
+      if (name) updates.name = name;
     }
 
-    const user = await User.findByIdAndUpdate(
-      decoded.id,
-      {
-        ...(name ? { name } : {}),
-        phone,
-        address,
-        language,
-        image,
-      },
-      { new: true }
-    ).select("name email phone address image language role");
+    if (typeof req.body?.phone === "string") {
+      updates.phone = req.body.phone.trim();
+    }
+
+    if (typeof req.body?.address === "string") {
+      updates.address = req.body.address.trim();
+    }
+
+    if (req.body?.language !== undefined) {
+      updates.language = normalizeLanguage(req.body.language);
+    }
+
+    // ✅ only touch image if client sent it
+    if (req.body?.image !== undefined) {
+      const image = String(req.body.image || "").trim();
+
+      // allow empty string to remove avatar
+      if (image === "") {
+        updates.image = "";
+      } else {
+        if (!isValidImageValue(image)) {
+          return res.status(400).json({
+            message: "Image must be a valid URL or /uploads/... path",
+          });
+        }
+        updates.image = image;
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(decoded.id, updates, {
+      new: true,
+      runValidators: true,
+    }).select("name email phone address image language role");
 
     return res.json({ user });
   } catch (err) {
