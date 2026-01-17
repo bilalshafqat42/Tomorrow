@@ -9,6 +9,7 @@ import fs from "fs";
 
 import authRoutes from "./routes/auth.js";
 import uploadRoutes from "./routes/upload.js";
+import projectsRouter from "./routes/projects.js";
 
 dotenv.config();
 
@@ -99,6 +100,7 @@ app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
 // ✅ Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/projects", projectsRouter);
 
 // ✅ Start server
 const PORT = process.env.PORT || 4000;
