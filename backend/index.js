@@ -12,7 +12,6 @@ import uploadRoutes from "./routes/upload.js";
 import projectsRouter from "./routes/projects.js";
 import unitInventoryRoutes from "./routes/unitInventory.routes.js";
 
-
 dotenv.config();
 
 const app = express();
@@ -103,9 +102,7 @@ app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/projects", projectsRouter);
-app.use("/api", unitInventoryRoutes);
 app.use("/api/units", unitInventoryRoutes);
-
 
 // ✅ Start server
 const PORT = process.env.PORT || 4000;
