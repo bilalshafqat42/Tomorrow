@@ -4,7 +4,7 @@ import { listUnits } from "../controllers/unitInventory.controller.js";
 
 const router = express.Router();
 
-// GET /api/units?projectSlug=tomorrow-166&status=Available
-router.get("/units", listUnits);
+// GET /api/units?projectSlug=tomorrow-166
+router.get("/", listUnits);
 
 export default router;
