@@ -5,10 +5,17 @@ const { Schema } = mongoose;
 // Small sub-schema for distances (no own _id)
 const distanceSchema = new Schema(
   {
-    label: { type: String, trim: true }, // e.g. "DXB Airport"
-    time: { type: String, trim: true }, // e.g. "12 min"
+    // e.g. "Gold Souk"
+    place: { type: String, trim: true, required: true },
+
+    // e.g. "4 min"
+    time: { type: String, trim: true, required: true },
+
+    // what we type into Google Maps as the starting point
+    // e.g. "Gold Souk, Dubai"
+    originQuery: { type: String, trim: true, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 // Optional: keep gallery items structured
@@ -17,7 +24,7 @@ const galleryItemSchema = new Schema(
     url: { type: String, trim: true, required: true },
     caption: { type: String, trim: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const projectSchema = new Schema(
@@ -49,6 +56,10 @@ const projectSchema = new Schema(
       lng: { type: Number },
     },
 
+    // Google Maps helpers
+    googleMapsUrl: { type: String, trim: true }, // for "Open in Google Maps" button
+    mapQuery: { type: String, trim: true }, // used for embedded map + destination
+
     // MARKETING COPY
     tagline: { type: String, trim: true }, // short line under title
     description: { type: String, trim: true }, // long description / about
@@ -71,7 +82,7 @@ const projectSchema = new Schema(
 
     // AMENITIES & DISTANCES
     amenities: [{ type: String, trim: true }], // ["Swimming pool", ...]
-    distances: [distanceSchema], // [{ label, time }, ...]
+    distances: [distanceSchema], // [{ place, time, originQuery }, ...]
 
     // FLAGS
     isFeatured: { type: Boolean, default: false, index: true },
@@ -79,7 +90,7 @@ const projectSchema = new Schema(
     // ADMIN
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.models.Project ||
