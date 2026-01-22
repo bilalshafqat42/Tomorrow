@@ -64,9 +64,23 @@ const projectSchema = new Schema(
     tagline: { type: String, trim: true }, // short line under title
     description: { type: String, trim: true }, // long description / about
 
+    // NEW: short description for cards (list view)
+    // e.g. "Low-rise beachfront residences with oversized balconies & park views."
+    shortDescription: { type: String, trim: true },
+
     // BUILDING INFO (for Tomorrow 166 / Commercial Tower screens)
     typology: { type: String, trim: true }, // e.g. "1–3 BR Apartments"
     height: { type: String, trim: true }, // e.g. "G+P+7"
+
+    // NEW: pricing & badges for list card
+    // e.g. 1850000 -> "From AED 1,850,000"
+    startingFromAED: { type: Number },
+
+    // e.g. "Dubai Islands", "Business Hub"
+    areaTag: { type: String, trim: true },
+
+    // e.g. ["Family Amenities", "Beach & Park Views"]
+    highlights: [{ type: String, trim: true }],
 
     // STATUS
     status: {
