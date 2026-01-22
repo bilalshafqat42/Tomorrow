@@ -49,8 +49,9 @@ const projectSchema = new Schema(
     },
 
     // LOCATION
-    locationText: { type: String, trim: true }, // e.g. "Dubai Islands"
+    locationText: { type: String, trim: true }, // e.g. "Dubai Islands – Island A"
     address: { type: String, trim: true },
+    areaTag: { type: String, trim: true }, // e.g. "Dubai Islands", "Business Hub"
     coordinates: {
       lat: { type: Number },
       lng: { type: Number },
@@ -61,26 +62,13 @@ const projectSchema = new Schema(
     mapQuery: { type: String, trim: true }, // used for embedded map + destination
 
     // MARKETING COPY
-    tagline: { type: String, trim: true }, // short line under title
+    tagline: { type: String, trim: true }, // short line under title (detail page)
+    shortDescription: { type: String, trim: true }, // short text for cards
     description: { type: String, trim: true }, // long description / about
-
-    // NEW: short description for cards (list view)
-    // e.g. "Low-rise beachfront residences with oversized balconies & park views."
-    shortDescription: { type: String, trim: true },
 
     // BUILDING INFO (for Tomorrow 166 / Commercial Tower screens)
     typology: { type: String, trim: true }, // e.g. "1–3 BR Apartments"
     height: { type: String, trim: true }, // e.g. "G+P+7"
-
-    // NEW: pricing & badges for list card
-    // e.g. 1850000 -> "From AED 1,850,000"
-    startingFromAED: { type: Number },
-
-    // e.g. "Dubai Islands", "Business Hub"
-    areaTag: { type: String, trim: true },
-
-    // e.g. ["Family Amenities", "Beach & Park Views"]
-    highlights: [{ type: String, trim: true }],
 
     // STATUS
     status: {
@@ -89,6 +77,11 @@ const projectSchema = new Schema(
       default: "upcoming",
       index: true,
     },
+    statusLabel: { type: String, trim: true }, // optional custom label, e.g. "In progress"
+
+    // PRICING
+    startingPriceAED: { type: Number }, // e.g. 1850000
+    startingPriceText: { type: String, trim: true }, // e.g. "From AED 1.85M"
 
     // IMAGES
     heroImageUrl: { type: String, trim: true },
@@ -97,6 +90,9 @@ const projectSchema = new Schema(
     // AMENITIES & DISTANCES
     amenities: [{ type: String, trim: true }], // ["Swimming pool", ...]
     distances: [distanceSchema], // [{ place, time, originQuery }, ...]
+
+    // HIGHLIGHTS FOR CARDS (optional)
+    highlights: [{ type: String, trim: true }], // ["Beachfront", "Retail podium"]
 
     // FLAGS
     isFeatured: { type: Boolean, default: false, index: true },
