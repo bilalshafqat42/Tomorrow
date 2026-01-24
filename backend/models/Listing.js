@@ -14,7 +14,6 @@ const listingSchema = new mongoose.Schema(
     },
 
     // HIGH-LEVEL TYPE
-    // e.g. house / apartment / office / shop / villa / plot / warehouse
     category: {
       type: String,
       enum: [
@@ -48,8 +47,6 @@ const listingSchema = new mongoose.Schema(
     // PRICING
     price: { type: Number, index: true },
     currency: { type: String, default: "AED" },
-
-    // helpful for sorting/filtering if you pre-compute it
     pricePerSqft: { type: Number, index: true },
 
     // PROPERTY DETAILS
@@ -59,7 +56,7 @@ const listingSchema = new mongoose.Schema(
 
     // building / view info
     buildingName: { type: String, trim: true },
-    view: { type: String, trim: true }, // Sea view, Park view, Skyline, etc.
+    view: { type: String, trim: true },
 
     // floor / completion
     floorNumber: { type: Number },
@@ -81,7 +78,7 @@ const listingSchema = new mongoose.Schema(
     },
 
     // LOCATION
-    locationText: { type: String, trim: true, index: true }, // e.g. Dubai Marina
+    locationText: { type: String, trim: true, index: true },
     address: { type: String, trim: true },
     coordinates: {
       lat: { type: Number },
@@ -96,7 +93,7 @@ const listingSchema = new mongoose.Schema(
     images: [{ url: String }],
 
     // FILTER HELPERS
-    amenities: [{ type: String, trim: true, index: true }], // pool, gym, parking, etc.
+    amenities: [{ type: String, trim: true, index: true }],
 
     // CONTACT / ASSIGNMENT
     assignedToSales: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -112,7 +109,7 @@ const listingSchema = new mongoose.Schema(
     isPublished: { type: Boolean, default: false, index: true },
     isFeatured: { type: Boolean, default: false, index: true },
 
-    // LABELS / BADGES (e.g. "Hot", "New", "Exclusive")
+    // LABELS / BADGES
     labels: [{ type: String, trim: true }],
 
     // INTERNAL REFERENCE
@@ -125,7 +122,7 @@ const listingSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Optional but very powerful: text search
+// Text search index
 listingSchema.index({
   title: "text",
   description: "text",

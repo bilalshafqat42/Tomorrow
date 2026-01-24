@@ -31,7 +31,9 @@ export async function listListings(req, res, next) {
       page = 1,
     } = req.query;
 
-    const filter = { isPublished: true };
+    // 🔹 Start with NO filters except what we add manually
+    // (later, when everything works, you can add isPublished: true again)
+    const filter = {};
 
     if (category) {
       filter.category = category;
@@ -67,7 +69,12 @@ export async function listListings(req, res, next) {
         filter.project = project._id;
       } else {
         // no listings if project not found
-        return res.json({ listings: [], total: 0 });
+        return res.json({
+          listings: [],
+          total: 0,
+          page: 1,
+          limit: Number(limit) || 20,
+        });
       }
     }
 
