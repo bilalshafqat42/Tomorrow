@@ -11,10 +11,7 @@ import authRoutes from "./routes/auth.js";
 import uploadRoutes from "./routes/upload.js";
 import projectsRouter from "./routes/projects.js";
 import unitInventoryRoutes from "./routes/unitInventory.routes.js";
-
-import listingRoutes from "./routes/listings.js";
-import listingsRouter from "./routes/listings.js";
-
+import listingRoutes from "./routes/listings.js"; // ✅ single import
 import propertyTypeRoutes from "./routes/propertyTypes.js";
 
 dotenv.config();
@@ -81,8 +78,6 @@ app.use(
 
       if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
 
-      // Allow any Expo dev origin like exp:// or null is already handled,
-      // but browser might send something else — keep strict.
       return cb(new Error("Not allowed by CORS: " + origin));
     },
     credentials: true,
@@ -108,8 +103,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/projects", projectsRouter);
 app.use("/api/units", unitInventoryRoutes);
-
-app.use("/api/listings", listingRoutes);
+app.use("/api/listings", listingRoutes); // ✅ uses the same name
 app.use("/api/property-types", propertyTypeRoutes);
 
 // ✅ Start server

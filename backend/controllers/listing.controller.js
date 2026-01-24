@@ -1,25 +1,27 @@
 // backend/controllers/listing.controller.js
 import mongoose from "mongoose";
 import Listing from "../models/Listing.js";
-import Project from "../models/Project.js";
 
 /**
  * GET /api/listings
  *
- * TEMP SIMPLE VERSION:
- * - Ignores all filters for now
- * - Returns up to 50 listings from the DB
- * Once you confirm data is coming through, we can re-add filters.
+ * Simple version:
+ * - Returns up to 50 listings
  */
 export async function listListings(req, res, next) {
   try {
-    const listings = await Listing.find({})
+    // If you want to only show published listings, uncomment:
+    // const filter = { isPublished: true };
+    // For now, return everything:
+    const filter = {};
+
+    const listings = await Listing.find(filter)
       .sort({ createdAt: -1 })
       .limit(50)
       .lean()
       .exec();
 
-    const total = await Listing.countDocuments({}).exec();
+    const total = await Listing.countDocuments(filter).exec();
 
     return res.json({
       listings,
