@@ -11,7 +11,7 @@ import authRoutes from "./routes/auth.js";
 import uploadRoutes from "./routes/upload.js";
 import projectsRouter from "./routes/projects.js";
 import unitInventoryRoutes from "./routes/unitInventory.routes.js";
-import listingRoutes from "./routes/listings.js"; // ✅ single import
+import listingRoutes from "./routes/listings.js";
 import propertyTypeRoutes from "./routes/propertyTypes.js";
 
 dotenv.config();
@@ -103,7 +103,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/projects", projectsRouter);
 app.use("/api/units", unitInventoryRoutes);
-app.use("/api/listings", listingRoutes); // ✅ uses the same name
+app.use("/api/listings", listingRoutes);
 app.use("/api/property-types", propertyTypeRoutes);
 
 // ✅ Start server
