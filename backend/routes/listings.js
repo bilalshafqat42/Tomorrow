@@ -1,8 +1,7 @@
-// backend/routes/listings.js
-import { Router } from "express";
+import express from "express";
 import { listListings, getListing } from "../controllers/listing.controller.js";
 
-const router = Router();
+const router = express.Router();
 
 // GET /api/listings
 router.get("/", listListings);

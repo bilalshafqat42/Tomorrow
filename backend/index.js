@@ -13,6 +13,8 @@ import projectsRouter from "./routes/projects.js";
 import unitInventoryRoutes from "./routes/unitInventory.routes.js";
 
 import listingRoutes from "./routes/listings.js";
+import listingsRouter from "./routes/listings.js";
+
 import propertyTypeRoutes from "./routes/propertyTypes.js";
 
 dotenv.config();
