@@ -23,23 +23,25 @@ app.set("trust proxy", 1);
 
 /**
  * Upload directories (single source of truth)
- * IMPORTANT: process.cwd() is stable for your current setup
+ * process.cwd() works well for your repo structure on local + Render
  */
 const ROOT_DIR = process.cwd();
 const UPLOAD_DIR = path.join(ROOT_DIR, "uploads");
 const AVATAR_DIR = path.join(UPLOAD_DIR, "avatars");
+const PROJECTS_DIR = path.join(UPLOAD_DIR, "projects");
 
-// ✅ Ensure upload folders exist
+// ✅ Ensure upload folders exist (avoid runtime crashes)
 fs.mkdirSync(AVATAR_DIR, { recursive: true });
+fs.mkdirSync(PROJECTS_DIR, { recursive: true });
 
 /**
  * ✅ Frontend URL (web app)
+ * Put your Vercel URL or web URL here in env if needed
  */
 const FRONT_URL = process.env.FRONT_URL || "https://tomorrow-app.onrender.com";
 
 /**
  * ✅ Extra origins (optional)
- * Add comma-separated origins in env if needed:
  * EXTRA_ORIGINS=https://example.com,http://localhost:19006
  */
 const EXTRA_ORIGINS = (process.env.EXTRA_ORIGINS || "")
@@ -50,15 +52,17 @@ const EXTRA_ORIGINS = (process.env.EXTRA_ORIGINS || "")
 /**
  * ✅ Allowed Origins
  * - Web app
+ * - Expo dev / localhost
  * - Optional extras
- * - Expo dev URLs (common)
  */
 const ALLOWED_ORIGINS = [
   FRONT_URL,
   FRONT_URL.replace("https://", "http://"),
-  "https://www.tomorrow-app.onrender.com",
 
-  // Expo dev / localhost (safe for development)
+  // ✅ Remove wrong "www." host (Render normally doesn't use www subdomain)
+  // "https://www.tomorrow-app.onrender.com",
+
+  // Expo dev / localhost
   "http://localhost:19000",
   "http://localhost:19006",
   "http://localhost:8081",
@@ -73,10 +77,16 @@ const ALLOWED_ORIGINS = [
 app.use(
   cors({
     origin: (origin, cb) => {
-      // ✅ allow Postman / server-to-server / many mobile requests (no Origin header)
+      // ✅ Mobile apps / Postman / server-to-server can have NO Origin header
       if (!origin) return cb(null, true);
 
       if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+
+      // ✅ Dev convenience: allow any Expo origin (optional)
+      // If you want stricter, remove this block.
+      if (origin.includes("exp://") || origin.includes("expo.dev")) {
+        return cb(null, true);
+      }
 
       return cb(new Error("Not allowed by CORS: " + origin));
     },
@@ -91,8 +101,8 @@ app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
 // ✅ Static serve uploads
-// Public access:
-// https://tomorrow-main.onrender.com/uploads/avatars/<file>
+// Example:
+// https://YOUR_BACKEND_DOMAIN/uploads/projects/tomorrow-166/hero.jpg
 app.use("/uploads", express.static(UPLOAD_DIR));
 
 // ✅ Health check
@@ -105,6 +115,14 @@ app.use("/api/projects", projectsRouter);
 app.use("/api/units", unitInventoryRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/property-types", propertyTypeRoutes);
+
+// ✅ Helpful error handler for CORS (so it doesn't look like random crash)
+app.use((err, req, res, next) => {
+  if (err?.message?.startsWith("Not allowed by CORS")) {
+    return res.status(403).json({ ok: false, message: err.message });
+  }
+  return next(err);
+});
 
 // ✅ Start server
 const PORT = process.env.PORT || 4000;

@@ -18,11 +18,42 @@ const distanceSchema = new Schema(
   { _id: false },
 );
 
-// Optional: keep gallery items structured
+// Gallery items (structured)
 const galleryItemSchema = new Schema(
   {
     url: { type: String, trim: true, required: true },
-    caption: { type: String, trim: true },
+    caption: { type: String, trim: true, default: "" },
+    sortOrder: { type: Number, default: 0 }, // ✅ added
+  },
+  { _id: false },
+);
+
+// ✅ Payment plan block
+const paymentPlanSchema = new Schema(
+  {
+    title: { type: String, trim: true, default: "PAYMENT PLAN" },
+    shortText: { type: String, trim: true, default: "" }, // "30/70"
+    description: { type: String, trim: true, default: "" },
+  },
+  { _id: false },
+);
+
+// ✅ Handover block
+const handoverSchema = new Schema(
+  {
+    year: { type: Number },
+    month: { type: String, trim: true, default: "" }, // "May"
+    text: { type: String, trim: true, default: "" }, // "Handover in MAY"
+  },
+  { _id: false },
+);
+
+// ✅ Size block
+const sizeSchema = new Schema(
+  {
+    text: { type: String, trim: true, default: "" }, // "871–1613 SQFT"
+    minSqft: { type: Number },
+    maxSqft: { type: Number },
   },
   { _id: false },
 );
@@ -40,7 +71,6 @@ const projectSchema = new Schema(
     },
 
     // TYPE / CATEGORY
-    // Used later for filters: Residential / Commercial / Mixed
     projectType: {
       type: String,
       enum: ["Residential", "Commercial", "Mixed"],
@@ -49,26 +79,26 @@ const projectSchema = new Schema(
     },
 
     // LOCATION
-    locationText: { type: String, trim: true }, // e.g. "Dubai Islands – Island A"
+    locationText: { type: String, trim: true },
     address: { type: String, trim: true },
-    areaTag: { type: String, trim: true }, // e.g. "Dubai Islands", "Business Hub"
+    areaTag: { type: String, trim: true },
     coordinates: {
       lat: { type: Number },
       lng: { type: Number },
     },
 
     // Google Maps helpers
-    googleMapsUrl: { type: String, trim: true }, // for "Open in Google Maps" button
-    mapQuery: { type: String, trim: true }, // used for embedded map + destination
+    googleMapsUrl: { type: String, trim: true },
+    mapQuery: { type: String, trim: true },
 
     // MARKETING COPY
-    tagline: { type: String, trim: true }, // short line under title (detail page)
-    shortDescription: { type: String, trim: true }, // short text for cards
-    description: { type: String, trim: true }, // long description / about
+    tagline: { type: String, trim: true },
+    shortDescription: { type: String, trim: true },
+    description: { type: String, trim: true },
 
-    // BUILDING INFO (for Tomorrow 166 / Commercial Tower screens)
-    typology: { type: String, trim: true }, // e.g. "1–3 BR Apartments"
-    height: { type: String, trim: true }, // e.g. "G+P+7"
+    // BUILDING INFO
+    typology: { type: String, trim: true },
+    height: { type: String, trim: true },
 
     // STATUS
     status: {
@@ -77,22 +107,31 @@ const projectSchema = new Schema(
       default: "upcoming",
       index: true,
     },
-    statusLabel: { type: String, trim: true }, // optional custom label, e.g. "In progress"
+    statusLabel: { type: String, trim: true },
 
     // PRICING
-    startingPriceAED: { type: Number }, // e.g. 1850000
-    startingPriceText: { type: String, trim: true }, // e.g. "From AED 1.85M"
+    startingPriceAED: { type: Number },
+    startingPriceText: { type: String, trim: true },
 
-    // IMAGES
+    // ✅ LAUNCH / HERO
+    launchTitle: { type: String, trim: true, default: "NEW LAUNCH" }, // ✅ added
+
+    // IMAGES / FILES
     heroImageUrl: { type: String, trim: true },
-    gallery: [galleryItemSchema],
+    brochureUrl: { type: String, trim: true }, // ✅ added (PDF path)
+    gallery: { type: [galleryItemSchema], default: [] }, // ✅ default + schema
+
+    // ✅ NEW "CARDS" DATA
+    paymentPlan: { type: paymentPlanSchema, default: () => ({}) }, // ✅ added
+    handover: { type: handoverSchema, default: () => ({}) }, // ✅ added
+    size: { type: sizeSchema, default: () => ({}) }, // ✅ added
 
     // AMENITIES & DISTANCES
-    amenities: [{ type: String, trim: true }], // ["Swimming pool", ...]
-    distances: [distanceSchema], // [{ place, time, originQuery }, ...]
+    amenities: [{ type: String, trim: true }],
+    distances: { type: [distanceSchema], default: [] },
 
     // HIGHLIGHTS FOR CARDS (optional)
-    highlights: [{ type: String, trim: true }], // ["Beachfront", "Retail podium"]
+    highlights: [{ type: String, trim: true }],
 
     // FLAGS
     isFeatured: { type: Boolean, default: false, index: true },
